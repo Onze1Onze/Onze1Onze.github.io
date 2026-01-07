@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Status Tracker</title>
+
+  <!-- Owlbear Rodeo SDK -->
+  <script src="https://unpkg.com/@owlbear-rodeo/sdk@latest/dist/obr.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      background: transparent;
+      font-family: sans-serif;
+    }
+
+    /* ===============================
+       HUD
+       =============================== */
+    #hud {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+
+      padding: 10px;
+      background: rgba(0, 0, 0, 0.7);
+      border-radius: 8px;
+      color: white;
+    }
+
+    #avatar-container {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 2px solid #fff;
+      cursor: pointer;
+
+      background-size: cover;
+      background-position: center;
+    }
+
+    #status-bars {
+      width: 140px;
+    }
+
+    .bar-container {
+      width: 100%;
+      height: 14px;
+      background: #333;
+      border-radius: 5px;
+      margin-bottom: 6px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .bar {
+      height: 100%;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    .hp-bar {
+      background: #e74c3c;
+    }
+
+    .sanity-bar {
+      background: #3498db;
+    }
+
+    .bar-text {
+      position: absolute;
+      width: 100%;
+      text-align: center;
+      font-size: 10px;
+      line-height: 14px;
+      font-weight: bold;
+      text-shadow: 1px 1px 2px black;
+      pointer-events: none;
+    }
+
+    /* ===============================
+       CONFIG PAINEL
+       =============================== */
+    #config {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.9);
+      padding: 20px;
+      box-sizing: border-box;
+      z-index: 1000;
+      color: white;
+    }
+
+    #config h3 {
+      margin-top: 0;
+    }
+
+    #config label {
+      display: block;
+      margin-top: 10px;
+      margin-bottom: 4px;
+    }
+
+    #config input {
+      width: 100%;
+      padding: 6px;
+      margin-bottom: 10px;
+      box-sizing: border-box;
+    }
+
+    #config button {
+      padding: 6px 12px;
+      margin-right: 6px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- HUD -->
+  <div id="hud">
+    <div id="avatar-container" title="Clique para configurar"></div>
+
+    <div id="status-bars">
+      <div class="bar-container">
+        <div id="hp-bar" class="bar hp-bar"></div>
+        <div id="hp-text" class="bar-text">HP: 0/0</div>
+      </div>
+
+      <div class="bar-container">
+        <div id="sanity-bar" class="bar sanity-bar"></div>
+        <div id="sanity-text" class="bar-text">SAN: 0/0</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONFIGURAÇÃO -->
+  <div id="config">
+    <h3>Configurações</h3>
+
+    <label>URL da Imagem</label>
+    <input type="text" id="img-url" placeholder="https://exemplo.com/imagem.png">
+
+    <label>ID da Planilha Google</label>
+    <input type="text" id="sheet-id" placeholder="ID da planilha">
+
+    <label>Nome da Aba</label>
+    <input type="text" id="sheet-name" placeholder="Página1">
+
+    <button onclick="saveConfig()">Salvar</button>
+    <button onclick="toggleConfig()">Fechar</button>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "status_tracker_config";
+
+    let config = {
+      imgUrl: "https://via.placeholder.com/60",
+      sheetId: "",
+      sheetName: "Página1"
+    };
+
+    async function init() {
+      const saved = await OBR.storage.getItem(STORAGE_KEY);
+      if (saved) config = saved;
+
+      updateUI();
+      fetchData();
+      setInterval(fetchData, 5000);
+    }
+
+    function toggleConfig() {
+      const cfg = document.getElementById("config");
+      cfg.style.display = cfg.style.display === "block" ? "none" : "block";
+
+      document.getElementById("img-url").value = config.imgUrl;
+      document.getElementById("sheet-id").value = config.sheetId;
+      document.getElementById("sheet-name").value = config.sheetName;
+    }
+
+    async function saveConfig() {
+      config = {
+        imgUrl: document.getElementById("img-url").value,
+        sheetId: document.getElementById("sheet-id").value,
+        sheetName: document.getElementById("sheet-name").value
+      };
+
+      await OBR.storage.setItem(STORAGE_KEY, config);
+      updateUI();
+      toggleConfig();
+      fetchData();
+    }
+
+    function updateUI() {
+      document.getElementById("avatar-container")
+        .style.backgroundImage = `url('${config.imgUrl}')`;
+    }
+
+    async function fetchData() {
+      if (!config.sheetId) return;
+
+      try {
+        const url = `https://docs.google.com/spreadsheets/d/${config.sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(config.sheetName)}`;
+        const response = await fetch(url);
+        const text = await response.text();
+
+        const rows = text.split("\n").map(r => r.split(","));
+        if (rows.length < 2) return;
+
+        const hp     = Number(rows[1][0]);
+        const hpMax  = Number(rows[1][1]);
+        const san    = Number(rows[1][2]);
+        const sanMax = Number(rows[1][3]);
+
+        updateBars(hp, hpMax, san, sanMax);
+      } catch (e) {
+        console.error("Erro ao buscar dados:", e);
+      }
+    }
+
+    function updateBars(hp, hpMax, san, sanMax) {
+      const hpPct  = hpMax  ? Math.max(0, Math.min(100, (hp / hpMax) * 100)) : 0;
+      const sanPct = sanMax ? Math.max(0, Math.min(100, (san / sanMax) * 100)) : 0;
+
+      document.getElementById("hp-bar").style.width = hpPct + "%";
+      document.getElementById("sanity-bar").style.width = sanPct + "%";
+
+      document.getElementById("hp-text").innerText = `HP: ${hp}/${hpMax}`;
+      document.getElementById("sanity-text").innerText = `SAN: ${san}/${sanMax}`;
+    }
+
+    document.getElementById("avatar-container").onclick = toggleConfig;
+
+    OBR.onReady(init);
+  </script>
+</body>
+</html>
