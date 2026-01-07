@@ -1,0 +1,14 @@
+{
+  "name": "Status Tracker (HP & Sanity)",
+  "version": "1.0.0",
+  "manifest_version": 1,
+  "description": "Exibe foto, vida e sanidade no canto inferior esquerdo, sincronizado com Google Sheets.",
+  "icon": "icon.png",
+  "action": {
+    "title": "Status Tracker",
+    "icon": "icon.svg",
+    "popover": "./index.html",
+    "width": 300,
+    "height": 150
+  }
+}
