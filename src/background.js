@@ -1,10 +1,11 @@
-import {startHandouts} from "./handouts.js?v=1.13.0";
+import {cleanupRetired} from "./cleanup-retired.js?v=1.14.0";
 import {createPortraitController} from "./portrait-controller.js?v=1.11.1";
 import OBR from "https://esm.sh/@owlbear-rodeo/sdk@2.3.0";
 import {normalize} from "./state.js?v=1.11.1";
 import {createPanelController} from "./panel.js?v=1.11.1";
 OBR.onReady(async () => {
-  void startHandouts().catch(error=>console.error("Handouts:",error));
+  const cleanup=()=>cleanupRetired(OBR).catch(error=>console.error("Limpeza de dados antigos:",error));
+  await cleanup();
   const panel = createPanelController({
     scene: OBR.scene, viewport: OBR.viewport, party: OBR.party, popover: OBR.popover,
     reportError: error => console.error("Arsenal:", error)
@@ -26,6 +27,7 @@ OBR.onReady(async () => {
     void selectAll(player.selection);
   });
   OBR.scene.onReadyChange(ready => {
+    if(ready)void cleanup();
     selectionRevision++;
     void selectAll([]);
     if (ready) void readSelection();
