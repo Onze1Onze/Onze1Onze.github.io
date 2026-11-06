@@ -15,7 +15,7 @@ function element(id="") {
 }
 async function flush(){for(let i=0;i<30;i++)await Promise.resolve();}
 async function ui(){
- const ids=["tracker","settings","name","remaining","capacity","rounds","status","config","config-form","weapon","cancel","burst"];
+ const ids=["tracker","settings","name","remaining","capacity","rounds","status","config","config-form","weapon","cancel","burst","reload"];
  const nodes=Object.fromEntries(ids.map(id=>[id,element(id)]));
  let token={id:"a",name:"Jaren",type:"IMAGE",layer:"CHARACTER",metadata:{}},ready,fail=false;
  const heights=[],effects=[];

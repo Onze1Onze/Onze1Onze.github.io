@@ -1,4 +1,5 @@
-import {cleanupRetired} from "./cleanup-retired.js?v=1.14.0";
+import {createSheetController,registerSheetMenu,SHEET_SETTINGS_ID} from "./sheet-controller.js?v=1.15.0";
+import {cleanupRetired} from "./cleanup-retired.js?v=1.15.0";
 import {createPortraitController} from "./portrait-controller.js?v=1.11.1";
 import OBR from "https://esm.sh/@owlbear-rodeo/sdk@2.3.0";
 import {normalize} from "./state.js?v=1.11.1";
@@ -14,8 +15,13 @@ OBR.onReady(async () => {
     scene:OBR.scene,viewport:OBR.viewport,popover:OBR.popover,
     reportError:error=>console.error("Retrato:",error)
   });
-  const selectAll=ids=>Promise.all([panel.select(ids),portrait.select(ids)]);
-  const refreshAll=()=>Promise.all([panel.refresh(),portrait.refresh()]);
+  const sheets=createSheetController({
+    scene:OBR.scene,viewport:OBR.viewport,popover:OBR.popover,
+    reportError:error=>console.error("Ficha:",error)
+  });
+  await registerSheetMenu(OBR).catch(error=>console.error("Menu da ficha:",error));
+  const selectAll=ids=>Promise.all([panel.select(ids),portrait.select(ids),sheets.select(ids)]);
+  const refreshAll=()=>Promise.all([panel.refresh(),portrait.refresh(),sheets.refresh()]);
   let selectionRevision = 0;
   async function readSelection() {
     const version = ++selectionRevision;
@@ -27,6 +33,7 @@ OBR.onReady(async () => {
     void selectAll(player.selection);
   });
   OBR.scene.onReadyChange(ready => {
+    void OBR.popover.close(SHEET_SETTINGS_ID);
     if(ready)void cleanup();
     selectionRevision++;
     void selectAll([]);

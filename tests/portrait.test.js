@@ -8,10 +8,10 @@ function fixture(){
  viewport:{getWidth:async()=>1366,getHeight:async()=>600},popover:{open:async p=>events.push(["open",p]),close:async()=>events.push(["close"])},reportError:e=>{throw e;}};
  return {api,events,tokens,controller:createPortraitController(api),setReady:value=>{ready=value;}};
 }
-test("portrait opens bottom right, swaps tokens and closes on invalid selection",async()=>{
+test("portrait opens bottom left, swaps tokens and closes on invalid selection",async()=>{
  const f=fixture();await f.controller.select(["a"]);
  assert.equal(f.events.at(-1)[1].width,220);assert.equal(f.events.at(-1)[1].height,76);
- assert.deepEqual(f.events.at(-1)[1].anchorPosition,{left:1130,top:508});
+ assert.deepEqual(f.events.at(-1)[1].anchorPosition,{left:16,top:508});
  await f.controller.select(["b"]);assert.ok(f.events.at(-1)[1].url.includes("token=b"));
  for(const ids of [[],null,["a","b"],["map"]]){await f.controller.select(ids);assert.equal(f.events.at(-1)[0],"close");}
 });
@@ -30,5 +30,5 @@ test("deselect during opening closes the late portrait",async()=>{
 test("portrait remains fixed while token metadata changes",async()=>{
  const f=fixture();await f.controller.select(["a"]);f.tokens.a.name="Renamed";
  await f.controller.refresh();assert.equal(f.events.filter(e=>e[0]==="open").length,1);
- assert.deepEqual(portraitPosition(180,70),{left:0,top:0});
+ assert.deepEqual(portraitPosition(180,70),{left:16,top:0});
 });
