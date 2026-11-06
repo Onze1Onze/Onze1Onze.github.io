@@ -29,10 +29,10 @@ function render() {
       const start = ring * 15;
       const count = Math.min(15, state.capacity - start);
       const angle = (index - start) / count * Math.PI * 2 - Math.PI/2;
-      const radius = Math.min(98, 35 + ring * 21);
+      const radius = Math.min(67, 20 + ring * 15);
       const single = state.capacity <= 15;
-      const r = single ? 85 : radius;
-      const size = single ? Math.min(38, 2*Math.PI*r / count - 4) : 19;
+      const r = single ? 60 : radius;
+      const size = single ? Math.min(32, 2*Math.PI*r / count - 4) : 14;
       button.style.cssText = "left:calc(50% + "+Math.cos(angle)*r+"px);top:calc(50% + "+Math.sin(angle)*r+"px);width:"+size+"px;height:"+size+"px";
     }
     button.onclick = () => mutate({type:"toggle",index});
