@@ -1,6 +1,6 @@
 export const PORTRAIT_ID = "com.onze1onze.arsenal/portrait";
 export function portraitPosition(width,height) {
- return {left:Math.max(0,width-220-16),top:Math.max(0,height-76-16)};
+ return {left:16,top:Math.max(0,height-76-16)};
 }
 export function createPortraitController(api) {
  let selection=[],revision=0,handled=0,active="",pending=null;
@@ -19,7 +19,7 @@ export function createPortraitController(api) {
     const position=portraitPosition(width,height),key=JSON.stringify([token.id,position]);
     if(key===active)continue;
     await api.popover.open({
-     id:PORTRAIT_ID,url:"/portrait.html?v=1.10.0&token="+encodeURIComponent(token.id),
+     id:PORTRAIT_ID,url:"/portrait.html?v=1.11.0&token="+encodeURIComponent(token.id),
      width:220,height:76,anchorReference:"POSITION",anchorPosition:position,
      transformOrigin:{horizontal:"LEFT",vertical:"TOP"},disableClickAway:true,marginThreshold:0
     });
