@@ -1,14 +1,15 @@
 {
-  "name": "Status Tracker (HP & Sanity)",
+  "name": "Munição • Arsenal",
   "version": "1.0.0",
   "manifest_version": 1,
-  "description": "Exibe foto, vida e sanidade no canto inferior esquerdo, sincronizado com Google Sheets.",
-  "icon": "icon.png",
+  "description": "Contador de munição por token com carregadores e tambor de revólver.",
+  "icon": "/icon.svg",
+  "background_url": "/background.html",
   "action": {
-    "title": "Status Tracker",
-    "icon": "icon.svg",
-    "popover": "./index.html",
-    "width": 300,
-    "height": 150
+    "title": "Munição",
+    "icon": "/icon.svg",
+    "popover": "/index.html",
+    "width": 420,
+    "height": 520
   }
 }
