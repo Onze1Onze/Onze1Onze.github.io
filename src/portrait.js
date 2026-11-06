@@ -1,5 +1,5 @@
-import OBR from "https://esm.sh/@owlbear-rodeo/sdk@2.3.0";
-import {PORTRAIT_ID} from "./portrait-controller.js?v=1.11.1";
+import OBR from "https://esm.sh/@owlbear-rodeo/sdk@3.1.0";
+import {PORTRAIT_ID} from "./portrait-controller.js?v=1.16.0";
 const tokenId=new URLSearchParams(location.search).get("token");
 const name=document.getElementById("name"),image=document.getElementById("portrait"),fallback=document.getElementById("fallback");
 let source="",revision=0;

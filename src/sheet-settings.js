@@ -1,6 +1,7 @@
-import OBR from "https://esm.sh/@owlbear-rodeo/sdk@2.3.0";
-import {SHEET_KEY,parseSheetLink,fetchMetrics} from "./sheet-source.js?v=1.15.0";
-import {SHEET_SETTINGS_ID} from "./sheet-controller.js?v=1.15.0";
+import {DEATH_KEY} from "./death-state.js?v=1.16.0";
+import OBR from "https://esm.sh/@owlbear-rodeo/sdk@3.1.0";
+import {SHEET_KEY,parseSheetLink,fetchMetrics} from "./sheet-source.js?v=1.16.0";
+import {SHEET_SETTINGS_ID} from "./sheet-controller.js?v=1.16.0";
 const $=id=>document.getElementById(id),tokenId=new URLSearchParams(location.search).get("token");
 let busy=false,disposed=false,request=null;
 function controls(disabled){$("save").disabled=disabled;$("unlink").disabled=disabled;$("link").disabled=disabled;}
@@ -24,7 +25,10 @@ async function save(unlink=false){
    for(const token of items){
     if(token.type!=="IMAGE"||token.layer!=="CHARACTER")continue;
     found=true;
-    if(unlink)delete token.metadata[SHEET_KEY];else token.metadata[SHEET_KEY]={url:config.url};
+    if(unlink){delete token.metadata[SHEET_KEY];delete token.metadata[DEATH_KEY];}else {
+     if(token.metadata[SHEET_KEY]?.url!==config.url)delete token.metadata[DEATH_KEY];
+     token.metadata[SHEET_KEY]={url:config.url};
+    }
    }
   });
   if(!found)throw Error("O personagem não está mais nesta cena.");

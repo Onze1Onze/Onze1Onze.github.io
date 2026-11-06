@@ -1,8 +1,8 @@
-import {createWeaponAudio, ammoFeedback} from "./audio.js?v=1.10.0";
-import OBR from "https://esm.sh/@owlbear-rodeo/sdk@2.3.0";
-import {KEY, WEAPONS, normalize, change} from "./state.js?v=1.10.0";
-import {PANEL_ID, panelSize} from "./panel.js?v=1.10.0";
-import {roundPlacement, magazineWidth} from "./layout.js?v=1.10.0";
+import {createWeaponAudio, ammoFeedback} from "./audio.js?v=1.16.0";
+import OBR from "https://esm.sh/@owlbear-rodeo/sdk@3.1.0";
+import {KEY, WEAPONS, normalize, change} from "./state.js?v=1.16.0";
+import {PANEL_ID, panelSize} from "./panel.js?v=1.16.0";
+import {roundPlacement, magazineWidth} from "./layout.js?v=1.16.0";
 const $ = id => document.getElementById(id);
 const tokenId = new URLSearchParams(location.search).get("token");
 let current = null, busy = false;

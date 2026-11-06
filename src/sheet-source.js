@@ -4,6 +4,12 @@ export const METRICS = Object.freeze([
  {id:"san",label:"Sanidade",current:"F9",maximum:"J9"},
  {id:"pe",label:"PE",current:"T9",maximum:"X9"}
 ]);
+export const DETAILS=Object.freeze([
+ {id:"movement",label:"Deslocamento",cell:"P16"},
+ {id:"defense",label:"Defesa",cell:"F16"},
+ {id:"block",label:"Bloqueio",cell:"L16"},
+ {id:"dodge",label:"Esquiva",cell:"J16"}
+]);
 export function parseSheetLink(input) {
  let url;
  try{url=new URL(String(input).trim());}catch{throw Error("Cole um link completo do Google Sheets.");}
@@ -22,7 +28,7 @@ export function requestUrl(config) {
  // Re-validate even stored metadata; never fetch arbitrary token-provided hosts.
  const c=parseSheetLink(config.url);
  if(c.published)return "https://docs.google.com/spreadsheets/d/e/"+c.id+"/pub?gid="+c.gid+"&single=true&output=csv";
- return "https://docs.google.com/spreadsheets/d/"+c.id+"/gviz/tq?gid="+c.gid+"&headers=0&range=F9%3AX9&tqx=out%3Ajson";
+ return "https://docs.google.com/spreadsheets/d/"+c.id+"/gviz/tq?gid="+c.gid+"&headers=0&range=F9%3AX18&tqx=out%3Ajson";
 }
 export function numberValue(value) {
  if(typeof value==="number")return Number.isFinite(value)?value:null;
@@ -43,6 +49,9 @@ export function metricValues(cells) {
   return {...metric,current,maximum,percent:maximum>0?Math.max(0,Math.min(100,current/maximum*100)):0};
  });
 }
+export function detailValues(cells){
+ return DETAILS.map(detail=>({...detail,kind:"detail",value:cells[detail.cell]===null||cells[detail.cell]===undefined||String(cells[detail.cell]).trim()===""?"—":String(cells[detail.cell]).trim().slice(0,40)}));
+}
 export function parseVisualization(text) {
  if(/^\s*</.test(text))throw Error("A planilha exige login. Compartilhe para leitura por link ou publique a aba.");
  const body=text.trim().replace(/^\/\*O_o\*\/\s*/,"");
@@ -50,16 +59,16 @@ export function parseVisualization(text) {
  const raw=body.startsWith(wrapper)?body.slice(wrapper.length).replace(/\);?\s*$/,""):body;
  let result;try{result=JSON.parse(raw);}catch{throw Error("O Google não retornou dados legíveis. Confira o compartilhamento da planilha.");}
  if(result.status==="error")throw Error("Não foi possível ler a aba. Confira o link, o gid e o acesso público.");
- const row=result.table?.rows?.[0]?.c;
- if(!Array.isArray(row))throw Error("A linha 9 está vazia ou não foi encontrada.");
- // F9:X9 includes blank cells belonging to merged ranges.
+ const rows=result.table?.rows;
+ if(!Array.isArray(rows)||!Array.isArray(rows[0]?.c))throw Error("A linha 9 está vazia ou não foi encontrada.");
  const cells={};
  for(const m of METRICS)for(const cell of [m.current,m.maximum]){
-  const index=cell.charCodeAt(0)-"F".charCodeAt(0),v=row[index];
-  cells[cell]=v?.v??v?.f??null;
+  const index=cell.charCodeAt(0)-70,v=rows[0].c[index];cells[cell]=v?.v??v?.f??null;
  }
- return metricValues(cells);
+ for(const detail of DETAILS){const cell=rows[7]?.c?.[detail.cell.charCodeAt(0)-70];cells[detail.cell]=cell?.f??cell?.v??null;}
+ return [...metricValues(cells),...detailValues(cells)];
 }
+
 export function parseCsv(text) {
  if(/^\s*</.test(text))throw Error("O link publicado não retornou CSV. Confira a publicação da aba.");
  const rows=[],row=[];let value="",quoted=false;
@@ -81,7 +90,8 @@ export function parsePublished(text) {
  if(!rows[8])throw Error("A aba publicada precisa conter a linha 9 da ficha.");
  for(const metric of METRICS)for(const cell of [metric.current,metric.maximum])
   cells[cell]=rows[8][cell.charCodeAt(0)-65];
- return metricValues(cells);
+ for(const detail of DETAILS)cells[detail.cell]=rows[15]?.[detail.cell.charCodeAt(0)-65];
+ return [...metricValues(cells),...detailValues(cells)];
 }
 export async function fetchMetrics(config,{signal,fetchImpl=globalThis.fetch}={}) {
  const canonical=parseSheetLink(config.url);

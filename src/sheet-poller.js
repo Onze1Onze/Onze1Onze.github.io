@@ -1,4 +1,4 @@
-import {fetchMetrics} from "./sheet-source.js?v=1.15.0";
+import {fetchMetrics} from "./sheet-source.js?v=1.16.0";
 export function createSheetPoller({onData,onError,read=fetchMetrics,delay=20000,timers=globalThis}) {
  let revision=0,abort=null,timer=null;
  function stop(){revision++;if(timer!==null)timers.clearTimeout(timer);timer=null;abort?.abort();abort=null;}

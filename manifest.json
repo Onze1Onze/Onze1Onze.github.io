@@ -1,8 +1,8 @@
 {
   "name": "Munição • Arsenal",
-  "version": "1.15.0",
+  "version": "1.16.0",
   "manifest_version": 1,
   "description": "Contador de munição por token com carregadores e tambor de revólver.",
   "icon": "/icon.svg",
-  "background_url": "/background.html?v=1.15.0"
+  "background_url": "/background.html?v=1.16.0"
 }

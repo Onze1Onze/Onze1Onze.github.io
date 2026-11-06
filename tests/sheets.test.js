@@ -31,9 +31,9 @@ test("rejects non-Google hosts, credential-bearing and non-HTTPS links",()=>{
 });
 test("reads precisely all six top-left cells of the merged ranges",()=>{
  const values=parseVisualization(visualization());
- assert.deepEqual(values.map(v=>[v.label,v.current,v.maximum]),[["Vida",18,25],["Sanidade",40,60],["PE",6,12]]);
+ assert.deepEqual(values.slice(0,3).map(v=>[v.label,v.current,v.maximum]),[["Vida",18,25],["Sanidade",40,60],["PE",6,12]]);
  const url=new URL(requestUrl(parseSheetLink(link)));
- assert.equal(url.searchParams.get("range"),"F9:X9");assert.equal(url.searchParams.get("headers"),"0");
+ assert.equal(url.searchParams.get("range"),"F9:X18");assert.equal(url.searchParams.get("headers"),"0");
  assert.equal(url.searchParams.get("gid"),"42");
 });
 test("published CSV respects row 9, blanks, quotes, CRLF and multiline cells",()=>{
@@ -57,7 +57,7 @@ test("login pages, API errors and missing cells report failure rather than zero"
 test("fetch is credential-free, constrained to Google, and reports network errors",async()=>{
  let requested;
  const values=await fetchMetrics(parseSheetLink(link),{fetchImpl:async(url,options)=>{requested={url,options};return {ok:true,headers:{get:()=>null},text:async()=>visualization()};}});
- assert.equal(values.length,3);assert.equal(requested.options.credentials,"omit");assert.equal(requested.options.referrerPolicy,"no-referrer");
+ assert.equal(values.length,7);assert.equal(requested.options.credentials,"omit");assert.equal(requested.options.referrerPolicy,"no-referrer");
  await assert.rejects(fetchMetrics({url:link},{fetchImpl:async()=>({ok:false,status:403})}));
  await assert.rejects(fetchMetrics({url:link},{fetchImpl:async()=>{throw Error("CORS");}}));
  await assert.rejects(fetchMetrics({url:link},{fetchImpl:async()=>({ok:true,headers:{get:()=>"3000000"},text:async()=>""})}));
@@ -95,7 +95,7 @@ function fixture(){
 }
 test("bars open to the right of portrait only for a linked character; unlink and deselect close",async()=>{
  const f=fixture();await f.controller.select(["a"]);assert.equal(f.events.at(-1)[1].id,STATS_ID);
- assert.deepEqual(f.events.at(-1)[1].anchorPosition,{left:244,top:584});
+ assert.deepEqual(f.events.at(-1)[1].anchorPosition,{left:244,top:510});
  for(const ids of [[],["b"],["a","b"]]){await f.controller.select(ids);assert.equal(f.events.at(-1)[0],"close");}
  await f.controller.select(["a"]);delete f.tokens.a.metadata[SHEET_KEY];await f.controller.refresh();assert.equal(f.events.at(-1)[0],"close");
 });
@@ -120,4 +120,13 @@ test("link option uses the native context menu restricted to one character",asyn
  let menu;await registerSheetMenu({contextMenu:{create:async value=>{menu=value;}}});
  assert.equal(menu.icons[0].label,"Vincular ficha");assert.equal(menu.icons[0].filter.max,1);
  assert.ok(menu.icons[0].filter.every.some(f=>f.key==="layer"&&f.value==="CHARACTER"));
+});
+
+test("critical condition expands the existing window only once without reopening on every marker",async()=>{
+ const f=fixture();await f.controller.select(["a"]);
+ f.tokens.a.metadata["com.onze1onze.arsenal/condition"]={hp:0,marks:[false,false,false]};
+ await f.controller.refresh();assert.equal(f.events.at(-1)[1].height,218);
+ const opens=f.events.filter(event=>event[0]==="open").length;
+ f.tokens.a.metadata["com.onze1onze.arsenal/condition"].marks=[true,true,true];await f.controller.refresh();
+ assert.equal(f.events.filter(event=>event[0]==="open").length,opens);
 });

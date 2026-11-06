@@ -19,7 +19,7 @@ export function createPortraitController(api) {
     const position=portraitPosition(width,height),key=JSON.stringify([token.id,position]);
     if(key===active)continue;
     await api.popover.open({
-     id:PORTRAIT_ID,url:"/portrait.html?v=1.11.1&token="+encodeURIComponent(token.id),
+     id:PORTRAIT_ID,url:"/portrait.html?v=1.16.0&token="+encodeURIComponent(token.id),
      width:220,height:76,anchorReference:"POSITION",anchorPosition:position,
      transformOrigin:{horizontal:"LEFT",vertical:"TOP"},disableClickAway:true,marginThreshold:0
     });
