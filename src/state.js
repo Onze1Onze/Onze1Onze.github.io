@@ -31,6 +31,7 @@ export function change(value, action = {}) {
   state.capacity=WEAPONS[action.weapon].capacity;
   state.rounds=roundsFor(action.weapon,state.magazines[action.weapon]);
  }
+ if(action.type==="reload") state.rounds.fill(true);
  if(action.type==="toggle" && Number.isInteger(action.index) && action.index>=0 && action.index<state.capacity)
   state.rounds[action.index]=!state.rounds[action.index];
  if(action.type==="burst" && WEAPONS[state.weapon].burst && state.rounds.filter(Boolean).length>=10) {

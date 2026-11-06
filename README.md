@@ -31,3 +31,5 @@ O tamanho da barra e a regra de posição abaixo de Players foram mantidos.
 ## Áudio e animação (1.7.0)
 Gastar munição toca um disparo; devolver toca recarga. Cada uma das oito armas tem um perfil sonoro sintetizado próprio (grave, estalo, duração e sequência mecânica), sem gravações externas. Saraivada toca dez disparos no ritmo da arma. Os sons são locais para quem clica e só tocam após a gravação bem-sucedida; alterações recebidas de outros clientes e troca de arma ficam silenciosas. Áudio bloqueado ou indisponível não impede editar munição.
 As balas e o contador recebem animações discretas; a preferência de movimento reduzido é respeitada. Tamanho, posição e controles foram preservados.
+
+O botão ↻ restaura todas as balas do carregador da arma selecionada e toca o som de recarga correspondente; fica desabilitado quando o carregador já está cheio.

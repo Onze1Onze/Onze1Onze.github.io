@@ -1,8 +1,8 @@
-import {createWeaponAudio, ammoFeedback} from "./audio.js?v=1.8.0";
+import {createWeaponAudio, ammoFeedback} from "./audio.js?v=1.9.0";
 import OBR from "https://esm.sh/@owlbear-rodeo/sdk@2.3.0";
-import {KEY, WEAPONS, normalize, change} from "./state.js?v=1.8.0";
-import {PANEL_ID, panelSize} from "./panel.js?v=1.8.0";
-import {roundPlacement, magazineWidth} from "./layout.js?v=1.8.0";
+import {KEY, WEAPONS, normalize, change} from "./state.js?v=1.9.0";
+import {PANEL_ID, panelSize} from "./panel.js?v=1.9.0";
+import {roundPlacement, magazineWidth} from "./layout.js?v=1.9.0";
 const $ = id => document.getElementById(id);
 const tokenId = new URLSearchParams(location.search).get("token");
 let current = null, busy = false;
@@ -51,6 +51,8 @@ function render() {
   $("capacity").textContent = state.capacity;
   const weapon = WEAPONS[state.weapon];
   $("name").title += " · " + weapon.name;
+  $("reload").disabled = busy || state.rounds.every(Boolean);
+  $("reload").title = state.rounds.every(Boolean) ? "Carregador já está cheio" : "Recarregar "+weapon.name;
   $("burst").hidden = !weapon.burst;
   $("burst").disabled = busy || state.rounds.filter(Boolean).length < 10;
   $("burst").title = state.rounds.filter(Boolean).length < 10 ? "Requer 10 balas carregadas" : "Gastar 10 balas carregadas";
@@ -95,7 +97,7 @@ async function mutate(action) {
   if (!current || busy) return;
   busy = true; render();
   let effect = null, saved = false;
-  if(action.type==="toggle" || action.type==="burst") void audio.unlock();
+  if(action.type==="toggle" || action.type==="burst" || action.type==="reload") void audio.unlock();
   try {
     await OBR.scene.items.updateItems([tokenId], items => {
       for (const item of items) {
@@ -142,6 +144,7 @@ for(const [id,weapon] of Object.entries(WEAPONS)) {
  const option=document.createElement("option");option.value=id;option.textContent=weapon.name+" · "+weapon.capacity+" "+(weapon.capacity===1?"bala":"balas");$("weapon").append(option);
 }
 $("burst").onclick = () => { void mutate({type:"burst"}); };
+$("reload").onclick = () => { void mutate({type:"reload"}); };
 render();
 if (!OBR.isAvailable) {
   $("status").textContent = "Abra esta extensão em uma sala do Owlbear Rodeo.";

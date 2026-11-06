@@ -106,3 +106,7 @@ label{color:#bbc0af}select{background:#141c1e;border-color:#6e735b;color:#e6e9df
 @keyframes arsenal-enter{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
 @keyframes config-enter{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+
+#reload{flex:0 0 25px;width:25px;height:24px;padding:0;border:1px solid #b6965b55;border-radius:5px;background:linear-gradient(#42443a,#2a3029);color:#e6c487;font-size:17px;line-height:1;transition:transform .18s,background .15s,color .15s}
+#reload:not(:disabled):hover{background:#51452e;color:#ffe2a8;transform:rotate(-24deg)}
+#reload:disabled{opacity:.35;cursor:default}
