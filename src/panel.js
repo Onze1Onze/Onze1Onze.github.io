@@ -35,7 +35,7 @@ export function createPanelController(api, normalize) {
         const key = JSON.stringify([token.id, layout, position]);
         if (key === activeKey) continue;
         await api.popover.open({
-          id: PANEL_ID, url: "/index.html?v=1.6.0&token=" + encodeURIComponent(token.id),
+          id: PANEL_ID, url: "/index.html?v=1.7.0&token=" + encodeURIComponent(token.id),
           ...size, anchorReference: "POSITION", anchorPosition: position,
           transformOrigin: {horizontal: "LEFT", vertical: "TOP"},
           disableClickAway: true, marginThreshold: 0

@@ -1,10 +1,25 @@
+import {createWeaponAudio, ammoFeedback} from "./audio.js?v=1.7.0";
 import OBR from "https://esm.sh/@owlbear-rodeo/sdk@2.3.0";
-import {KEY, WEAPONS, normalize, change} from "./state.js?v=1.6.0";
-import {PANEL_ID, panelSize} from "./panel.js?v=1.6.0";
-import {roundPlacement, magazineWidth} from "./layout.js?v=1.6.0";
+import {KEY, WEAPONS, normalize, change} from "./state.js?v=1.7.0";
+import {PANEL_ID, panelSize} from "./panel.js?v=1.7.0";
+import {roundPlacement, magazineWidth} from "./layout.js?v=1.7.0";
 const $ = id => document.getElementById(id);
 const tokenId = new URLSearchParams(location.search).get("token");
 let current = null, busy = false;
+const audio = createWeaponAudio();
+globalThis.addEventListener?.("pagehide", () => audio.dispose(), {once:true});
+function animateFeedback(effect) {
+ if(!effect)return;
+ const reduced=globalThis.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+ if(reduced)return;
+ try {
+  $("remaining").animate?.([{opacity:.45,transform:"translateY(2px)"},{opacity:1,transform:"translateY(0)"}],{duration:180});
+  for(const index of effect.indices){
+   const node=$("rounds").querySelector('[data-index="'+index+'"]');
+   node?.animate?.(effect.type==="shot" ? [{filter:"brightness(2.5)",opacity:1},{filter:"brightness(1)",opacity:1}] : [{filter:"brightness(1.8)",opacity:.3},{filter:"brightness(1)",opacity:1}],{duration:effect.type==="shot"?220:320});
+  }
+ }catch{}
+}
 const bullet = '<svg viewBox="0 0 30 70" aria-hidden="true"><path fill="currentColor" d="M6 54V22Q6 6 15 2q9 4 9 20v32zM4 57h22v9H4z"/><path stroke="#11151c" opacity=".3" d="M7 24h16M10 28v22"/></svg>';
 const shell = '<svg viewBox="0 0 30 70" aria-hidden="true"><path fill="currentColor" d="M5 5h20v47H5z"/><path fill="#b5945e" d="M3 53h24v13H3z"/><path stroke="#191a22" opacity=".3" d="M10 8v41M20 8v41"/></svg>';
 const longRound = '<svg viewBox="0 0 30 70" aria-hidden="true"><path fill="currentColor" d="M8 66V32l3-8V14l4-13 4 13v10l3 8v34z"/><path stroke="#191a22" opacity=".4" d="M8 34h14M8 60h14"/></svg>';
@@ -64,10 +79,19 @@ async function resize(height) {
 async function mutate(action) {
   if (!current || busy) return;
   busy = true; render();
+  let effect = null, saved = false;
+  if(action.type==="toggle" || action.type==="burst") void audio.unlock();
   try {
     await OBR.scene.items.updateItems([tokenId], items => {
-      for (const item of items) item.metadata[KEY] = change(item.metadata?.[KEY], action);
+      for (const item of items) {
+        const before=normalize(item.metadata?.[KEY]);
+        const after=change(before,action);
+        item.metadata[KEY]=after;
+        effect=ammoFeedback(before,after);
+      }
     });
+    saved = true;
+    void audio.play(effect);
     // Do not depend on an onChange event arriving before updateItems resolves.
     await refresh();
     $("status").textContent = "";
@@ -76,7 +100,7 @@ async function mutate(action) {
     $("status").textContent = "Não foi possível salvar. Verifique a permissão do token.";
     console.error("Arsenal:", error);
     return false;
-  } finally { busy = false; render(); }
+  } finally { busy = false; render(); if(saved)animateFeedback(effect); }
 }
 async function openConfig() {
   if (!current || busy) return;

@@ -37,3 +37,14 @@ header{gap:5px}#burst{font-size:9px;line-height:18px;padding:0 5px;border-color:
 #rounds.revolver{padding:0 4px;display:flex}
 .revolver .magazine{flex:0 0 96px;width:96px!important;min-width:96px;height:96px;margin:auto;border-radius:50%;background:radial-gradient(circle,#666370 0 7%,#222430 8% 57%,#45424c 58% 62%,transparent 63%)}
 .revolver .round{transform:translate(-50%,-50%);border-radius:50%}
+
+/* Subtle interaction polish, with no geometry changes. */
+#settings{transition:background .15s,color .15s}
+#settings[aria-expanded="true"]{color:#f0c17c;background:#38323a}
+.round{transition:color .14s,background .14s,filter .14s}
+.round:not(:disabled):hover{filter:brightness(1.2);box-shadow:inset 0 0 0 1px #eabd7726}
+.round:not(:disabled):active{filter:brightness(1.7)}
+#burst{transition:background .15s,border-color .15s}
+#burst:not(:disabled):hover{border-color:#d0a267}
+#count{transition:color .15s}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}

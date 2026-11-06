@@ -1,3 +1,4 @@
+import {ammoFeedback} from "../src/audio.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
@@ -17,19 +18,19 @@ async function ui(){
  const ids=["tracker","settings","name","remaining","capacity","rounds","status","config","config-form","weapon","cancel","burst"];
  const nodes=Object.fromEntries(ids.map(id=>[id,element(id)]));
  let token={id:"a",name:"Jaren",type:"IMAGE",layer:"CHARACTER",metadata:{}},ready,fail=false;
- const heights=[];
+ const heights=[],effects=[];
  const sdk={isAvailable:true,onReady:fn=>{ready=fn;},scene:{items:{
  getItems:async()=>[token],updateItems:async(ids,fn)=>{if(fail)throw Error("denied");fn([token]);},
  onChange:()=>{}}},popover:{setHeight:async(id,h)=>{heights.push(h);},close:async()=>{}}};
  const document={getElementById:id=>nodes[id]||null,createElement:()=>element(),activeElement:null};
- new Function("OBR","document","location","URLSearchParams","KEY","WEAPONS","normalize","change","PANEL_ID","panelSize","roundPlacement","magazineWidth","console",
- appSource.replace(/^import .*;\n/gm,""))(sdk,document,{search:"?token=a"},URLSearchParams,KEY,WEAPONS,normalize,change,PANEL_ID,panelSize,roundPlacement,magazineWidth,{error:()=>{}});
+ new Function("OBR","document","location","URLSearchParams","KEY","WEAPONS","normalize","change","PANEL_ID","panelSize","roundPlacement","magazineWidth","createWeaponAudio","ammoFeedback","console",
+ appSource.replace(/^import .*;\n/gm,""))(sdk,document,{search:"?token=a"},URLSearchParams,KEY,WEAPONS,normalize,change,PANEL_ID,panelSize,roundPlacement,magazineWidth,()=>({unlock:async()=>true,play:effect=>{if(effect)effects.push(effect);},dispose(){}}),ammoFeedback,{error:()=>{}});
  await ready();
  async function choose(weapon){
   nodes.settings.onclick();await flush();nodes.weapon.value=weapon;
   await nodes["config-form"].onsubmit({preventDefault(){}});
  }
- return {nodes,token,heights,choose,setFail:value=>{fail=value;}};
+ return {nodes,token,heights,effects,choose,setFail:value=>{fail=value;}};
 }
 test("UI offers all fixed weapons, no capacity input, and exact bullet counts",async()=>{
  const u=await ui();assert.equal(u.nodes.weapon.children.length,8);
@@ -56,4 +57,19 @@ test("failed save retains settings and the old magazine",async()=>{
  assert.equal(u.nodes.config.open,true);
  assert.equal(u.nodes.remaining.textContent,12);
  assert.ok(u.nodes.status.textContent.includes("permissão"));
+});
+
+test("only successful ammo edits trigger shot/reload feedback",async()=>{
+ const u=await ui();
+ u.nodes.rounds.children[0].children[0].onclick();await flush();
+ assert.equal(u.effects.at(-1).type,"shot");
+ u.nodes.rounds.children[0].children[0].onclick();await flush();
+ assert.equal(u.effects.at(-1).type,"reload");
+ const count=u.effects.length;
+ await u.choose("assault");assert.equal(u.effects.length,count);
+ u.nodes.burst.onclick();await flush();
+ assert.equal(u.effects.at(-1).indices.length,10);
+ const afterBurst=u.effects.length;u.setFail(true);
+ u.nodes.rounds.children[0].children[12].onclick();await flush();
+ assert.equal(u.effects.length,afterBurst);
 });
