@@ -39,3 +39,7 @@ O conteúdo anterior foi substituído e permanece recuperável no histórico Git
 
 ## Painel compacto (1.1)
 O painel de 280 × 300 px fica à direita do token. A posição é recalculada a cada 100 ms para acompanhar câmera, zoom e movimento do personagem. Clicar no mapa não solta o personagem vinculado. Quando não há espaço para o painel inteiro ao lado do token, ele fica oculto e reaparece ao voltar a essa região. A integração visual deve ser conferida na sala após atualizar.
+
+
+## Painel fixo e compacto (1.3)
+O painel mede 230 × 240 px e é aberto ao lado do token no instante da seleção. Depois de aberto, permanece fixo na tela enquanto a câmera se move ou aplica zoom; selecionar outro token reposiciona o painel uma vez.

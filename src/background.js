@@ -1,5 +1,6 @@
 import OBR from "https://esm.sh/@owlbear-rodeo/sdk@2.3.0";
 const id = "com.onze1onze.arsenal/panel";
+const PANEL_WIDTH = 230, PANEL_HEIGHT = 240, GAP = 10;
 let target = null, last = "", running = false;
 async function tick() {
   if (running) return;
@@ -14,24 +15,28 @@ async function tick() {
     const [token] = await OBR.scene.items.getItems([tokenId]);
     if (!token) { target = null; return; }
     const bounds = await OBR.scene.items.getItemBounds([tokenId]);
-    const [point, width, height] = await Promise.all([
+    const [point, viewportWidth, viewportHeight] = await Promise.all([
       OBR.viewport.transformPoint({x: bounds.max.x, y: bounds.center.y}),
       OBR.viewport.getWidth(), OBR.viewport.getHeight()
     ]);
     if (target !== tokenId) return;
-    const left = Math.round(point.x + 10), top = Math.round(point.y - 70);
-    if (left < 0 || left + 280 > width || top < 0 || top + 300 > height) {
-      if (last) await OBR.popover.close(id);
-      last = "";
-      return;
-    }
+
+    // Calculate the position once, when the token is selected.
+    // POSITION keeps the panel fixed while the camera moves.
+    let left = Math.round(point.x + GAP);
+    if (left + PANEL_WIDTH > viewportWidth) left = Math.round(point.x - PANEL_WIDTH - GAP);
+    left = Math.max(0, Math.min(left, viewportWidth - PANEL_WIDTH));
+    const top = Math.max(0, Math.min(
+      Math.round(point.y - PANEL_HEIGHT / 2),
+      viewportHeight - PANEL_HEIGHT
+    ));
     const key = tokenId + ":" + left + ":" + top;
     if (key === last) return;
     await OBR.popover.open({
       id,
       url: "/index.html?token=" + encodeURIComponent(tokenId),
-      width: 280,
-      height: 300,
+      width: PANEL_WIDTH,
+      height: PANEL_HEIGHT,
       anchorReference: "POSITION",
       anchorPosition: {left, top},
       transformOrigin: {horizontal: "LEFT", vertical: "TOP"},
@@ -66,5 +71,4 @@ OBR.onReady(async () => {
     if (ready) void OBR.player.getSelection().then(select);
   });
   await select(await OBR.player.getSelection());
-  setInterval(() => void tick(), 100);
 });
