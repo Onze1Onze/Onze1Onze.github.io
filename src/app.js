@@ -1,22 +1,37 @@
-import {createWeaponAudio, ammoFeedback} from "./audio.js?v=1.7.0";
+import {createWeaponAudio, ammoFeedback} from "./audio.js?v=1.8.0";
 import OBR from "https://esm.sh/@owlbear-rodeo/sdk@2.3.0";
-import {KEY, WEAPONS, normalize, change} from "./state.js?v=1.7.0";
-import {PANEL_ID, panelSize} from "./panel.js?v=1.7.0";
-import {roundPlacement, magazineWidth} from "./layout.js?v=1.7.0";
+import {KEY, WEAPONS, normalize, change} from "./state.js?v=1.8.0";
+import {PANEL_ID, panelSize} from "./panel.js?v=1.8.0";
+import {roundPlacement, magazineWidth} from "./layout.js?v=1.8.0";
 const $ = id => document.getElementById(id);
 const tokenId = new URLSearchParams(location.search).get("token");
 let current = null, busy = false;
 const audio = createWeaponAudio();
 globalThis.addEventListener?.("pagehide", () => audio.dispose(), {once:true});
 function animateFeedback(effect) {
- if(!effect)return;
- const reduced=globalThis.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
- if(reduced)return;
+ if(!effect || globalThis.matchMedia?.("(prefers-reduced-motion: reduce)").matches)return;
  try {
-  $("remaining").animate?.([{opacity:.45,transform:"translateY(2px)"},{opacity:1,transform:"translateY(0)"}],{duration:180});
-  for(const index of effect.indices){
+  $("remaining").animate?.(
+   [{color:"#fff0c9",textShadow:"0 0 9px #e6b87588"},{color:"#f1ca89",textShadow:"0 0 12px #dfb47530"}],
+   {duration:300,easing:"ease-out"});
+  const shots=effect.type==="shot";
+  $("rounds").animate?.(
+   [{boxShadow:shots?"inset 0 0 12px #eebc6930":"inset 0 0 12px #afc6a430"},{boxShadow:"inset 0 2px 5px #0006,0 1px #e6cc9220"}],
+   {duration:280,easing:"ease-out"});
+  for(const [order,index] of effect.indices.entries()){
    const node=$("rounds").querySelector('[data-index="'+index+'"]');
-   node?.animate?.(effect.type==="shot" ? [{filter:"brightness(2.5)",opacity:1},{filter:"brightness(1)",opacity:1}] : [{filter:"brightness(1.8)",opacity:.3},{filter:"brightness(1)",opacity:1}],{duration:effect.type==="shot"?220:320});
+   const sprite=node?.querySelector("svg");
+   // Animate only the SVG, preserving the revolver's positioned hit area.
+   const frames=shots?[
+    {transform:"translateY(0) rotate(0)",filter:"brightness(2.1)",opacity:1},
+    {transform:"translateY(3px) rotate(-5deg)",filter:"brightness(1.3)",opacity:.85,offset:.25},
+    {transform:"translateY(0) rotate(0)",filter:"brightness(1)",opacity:1}
+   ]:[
+    {transform:"translateY(5px) scale(.88)",filter:"brightness(1.6)",opacity:.25},
+    {transform:"translateY(-1px) scale(1.03)",filter:"brightness(1.2)",opacity:1,offset:.7},
+    {transform:"translateY(0) scale(1)",filter:"brightness(1)",opacity:1}
+   ];
+   sprite?.animate?.(frames,{duration:shots?240:320,delay:Math.min(order*16,120),easing:"ease-out"});
   }
  }catch{}
 }
