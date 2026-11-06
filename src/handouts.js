@@ -1,26 +1,21 @@
 import OBR,{buildImage} from "https://esm.sh/@owlbear-rodeo/sdk@2.3.0";
-import {HK,CHANNEL,TOOL,MODE,TRAY,SETTINGS,validCode,press,hitKey,imageUrl} from "./handout-model.js?v=1.12.0";
+import {HK,CHANNEL,TOOL,MODE,TRAY,SETTINGS,validCode,press,hitKey,imageUrl} from "./handout-model.js?v=1.13.0";
 export async function startHandouts(){
  let sequence=Promise.resolve(),sceneRevision=0;
  const connection=await OBR.player.getConnectionId();
  const rates=new Map();
  const report=error=>{console.error("Handouts:",error);void OBR.notification.show(error.message||"Não foi possível atualizar o handout.","ERROR");};
  const send=data=>OBR.broadcast.sendMessage(CHANNEL,data,{destination:"ALL"});
- async function openTray(){
-  const width=await OBR.viewport.getWidth();
-  await OBR.popover.open({id:TRAY,url:"/handouts.html?v=1.12.0",width:240,height:250,anchorReference:"POSITION",
-   anchorPosition:{left:Math.max(0,width-310),top:16},transformOrigin:{horizontal:"LEFT",vertical:"TOP"},disableClickAway:true,marginThreshold:0});
- }
  async function configure(id){
   if(await OBR.player.getRole()!=="GM")return;
   const width=await OBR.viewport.getWidth();
-  await OBR.popover.open({id:SETTINGS,url:"/handout-settings.html?v=1.12.0&id="+encodeURIComponent(id),width:300,height:420,
+  await OBR.popover.open({id:SETTINGS,url:"/handout-settings.html?v=1.13.0&id="+encodeURIComponent(id),width:300,height:420,
    anchorReference:"POSITION",anchorPosition:{left:Math.max(0,width-370),top:90},transformOrigin:{horizontal:"LEFT",vertical:"TOP"},disableClickAway:true});
  }
  async function update(id,fn){
   await OBR.scene.items.updateItems([id],items=>{for(const item of items){
    const state=item.metadata[HK];if(!state)continue;
-   const next=fn(state);item.metadata[HK]=next;item.image.url=imageUrl(next);
+   const next=fn(state);item.metadata[HK]=next;item.image.url=new URL("/handout-"+(next.solved?"open":next.status==="denied"?"denied":"locked")+".svg",location.origin).href;
    item.name=next.title||"Teclado de porta";item.layer=next.onTop?"POPOVER":"PROP";item.zIndex=next.onTop?Date.now():0;
   }});
  }
@@ -75,7 +70,6 @@ export async function startHandouts(){
   }});
  await OBR.contextMenu.create({id:HK+"/config",icons:[{icon:"/handout-icon.svg",label:"Configurar teclado",filter:{roles:["GM"],every:[{key:["metadata",HK],operator:"!=",value:undefined}]}}],
   onClick:context=>{void configure(context.items[0]?.id).catch(report);}});
- OBR.scene.onReadyChange(ready=>{sceneRevision++;void OBR.popover.close(SETTINGS);if(ready)void openTray().catch(report);});
- window.addEventListener("resize",()=>{void openTray().catch(report);});
- await openTray();
+ OBR.scene.onReadyChange(ready=>{sceneRevision++;void OBR.popover.close(SETTINGS);});
+ await OBR.popover.close(TRAY);
 }

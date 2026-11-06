@@ -1,5 +1,6 @@
+import {createHandout} from "./handout-create.js?v=1.13.0";
 import OBR from "https://esm.sh/@owlbear-rodeo/sdk@2.3.0";
-import {HK,CHANNEL,TOOL,MODE,TRAY} from "./handout-model.js?v=1.12.0";
+import {HK,CHANNEL,TOOL,MODE,TRAY} from "./handout-model.js?v=1.13.0";
 const $=id=>document.getElementById(id);
 let folded=false;
 const send=data=>OBR.broadcast.sendMessage(CHANNEL,data,{destination:"LOCAL"});
@@ -21,10 +22,10 @@ async function render(){
   $("list").append(row);
  }
 }
-$("fold").onclick=async()=>{folded=!folded;$("body").hidden=folded;$("fold").textContent=folded?"+":"−";await OBR.popover.setHeight(TRAY,folded?44:250);};
+$("fold").onclick=async()=>{folded=!folded;$("body").hidden=folded;$("fold").textContent=folded?"+":"−";await OBR.action.setHeight(folded?44:310);};
 $("keypad").onclick=async()=>{
  try{const gm=await OBR.player.getRole()==="GM";$("keypad").disabled=true;
- if(gm)await send({type:"create"});else await OBR.tool.activateMode(TOOL,MODE);
+ if(gm){const id=await createHandout();$("status").textContent="Teclado colocado na cena. Senha inicial: 1998.";await send({type:"configure",id});}else await OBR.tool.activateMode(TOOL,MODE);
  }catch(error){$("status").textContent=error.message;}finally{$("keypad").disabled=false;}
 };
 OBR.onReady(()=>{OBR.scene.items.onChange(()=>void render());OBR.scene.onReadyChange(()=>void render());OBR.player.onChange(()=>void render());void render();});

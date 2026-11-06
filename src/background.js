@@ -1,4 +1,4 @@
-import {startHandouts} from "./handouts.js?v=1.12.0";
+import {startHandouts} from "./handouts.js?v=1.13.0";
 import {createPortraitController} from "./portrait-controller.js?v=1.11.1";
 import OBR from "https://esm.sh/@owlbear-rodeo/sdk@2.3.0";
 import {normalize} from "./state.js?v=1.11.1";
