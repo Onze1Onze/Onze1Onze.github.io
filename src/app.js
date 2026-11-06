@@ -1,94 +1,109 @@
 import OBR from "https://esm.sh/@owlbear-rodeo/sdk@2.3.0";
-import {KEY, normalize, change} from "./state.js";
+import {KEY, normalize, change} from "./state.js?v=1.5.0";
+import {PANEL_ID, panelSize} from "./panel.js?v=1.5.0";
+import {chamberPosition} from "./layout.js?v=1.5.0";
 const $ = id => document.getElementById(id);
-const fixed = new URLSearchParams(location.search).get("token");
-let selected = fixed, current = null, busy = false, revision = 0;
-const bullet = '<svg viewBox="0 0 30 70" aria-hidden="true"><path fill="currentColor" d="M6 54V22Q6 6 15 2q9 4 9 20v32z"/><path fill="currentColor" d="M4 57h22v9H4z"/><path stroke="#11151c" opacity=".3" d="M7 24h16M10 28v22"/></svg>';
-const chamber = '<svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="17" fill="currentColor"/><circle cx="20" cy="20" r="10" fill="none" stroke="#11151c" stroke-width="2"/><circle cx="20" cy="20" r="3" fill="#11151c"/></svg>';
+const tokenId = new URLSearchParams(location.search).get("token");
+let current = null, busy = false;
+const bullet = '<svg viewBox="0 0 30 70" aria-hidden="true"><path fill="currentColor" d="M6 54V22Q6 6 15 2q9 4 9 20v32zM4 57h22v9H4z"/><path stroke="#11151c" opacity=".3" d="M7 24h16M10 28v22"/></svg>';
+const chamber = '<svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="17" fill="currentColor"/><circle cx="20" cy="20" r="10" fill="none" stroke="#191a22" stroke-width="2"/><circle cx="20" cy="20" r="3" fill="#191a22"/></svg>';
 function render() {
   $("tracker").hidden = !current;
   $("settings").disabled = !current || busy;
-  if (!current) { $("name").textContent = "Selecione um personagem"; return; }
-  const state = normalize(current.metadata[KEY]);
+  if (!current) return;
+  const state = normalize(current.metadata?.[KEY]);
   $("name").textContent = current.name || "Personagem";
+  $("name").title = current.name || "Personagem";
   $("remaining").textContent = state.rounds.filter(Boolean).length;
   $("capacity").textContent = state.capacity;
-  $("layout-label").textContent = {pistol:"PISTOLA",rifle:"FUZIL",revolver:"REVÓLVER"}[state.layout];
-  const container = $("rounds");
+  const container = $("rounds"), scroll = container.scrollLeft;
+  const focusIndex = container.contains(document.activeElement) ? document.activeElement.dataset.index : null;
   container.className = state.layout;
   container.replaceChildren();
+  const drums = [];
   state.rounds.forEach((loaded, index) => {
     const button = document.createElement("button");
-    button.className = "round" + (loaded ? "" : " spent");
-    button.type = "button"; button.disabled = busy;
+    button.type = "button"; button.dataset.index = index;
+    button.className = "round" + (loaded ? "" : " spent"); button.disabled = busy;
     button.setAttribute("aria-label", "Bala " + (index+1) + (loaded ? ": carregada" : ": gasta"));
     button.setAttribute("aria-pressed", String(loaded));
+    button.title = "Bala " + (index+1) + (loaded ? " · carregada" : " · gasta");
     button.innerHTML = state.layout === "revolver" ? chamber : bullet;
+    let parent = container;
     if (state.layout === "revolver") {
-      const ring = Math.floor(index / 15);
-      const start = ring * 15;
-      const count = Math.min(15, state.capacity - start);
-      const angle = (index - start) / count * Math.PI * 2 - Math.PI/2;
-      const radius = Math.min(67, 20 + ring * 15);
-      const single = state.capacity <= 15;
-      const r = single ? 60 : radius;
-      const size = single ? Math.min(32, 2*Math.PI*r / count - 4) : 14;
-      button.style.cssText = "left:calc(50% + "+Math.cos(angle)*r+"px);top:calc(50% + "+Math.sin(angle)*r+"px);width:"+size+"px;height:"+size+"px";
+      const p = chamberPosition(index, state.capacity);
+      if (!drums[p.group]) {
+        const drum = document.createElement("div"); drum.className = "drum";
+        container.append(drum); drums[p.group] = drum;
+      }
+      parent = drums[p.group];
+      button.style.cssText = "left:"+p.x+"px;top:"+p.y+"px;width:"+p.size+"px;height:"+p.size+"px";
     }
-    button.onclick = () => mutate({type:"toggle",index});
-    container.append(button);
+    button.onclick = () => { void mutate({type:"toggle",index}); };
+    parent.append(button);
   });
+  container.scrollLeft = scroll;
+  if (focusIndex !== null) container.querySelector('[data-index="'+focusIndex+'"]')?.focus({preventScroll:true});
 }
 async function refresh() {
-  const version = ++revision;
-  try {
-    if (!await OBR.scene.isReady()) { current = null; $("status").textContent = "Abra uma cena para usar a munição."; render(); return; }
-    const selection = fixed ? [fixed] : await OBR.player.getSelection();
-    const ids = selection || [];
-    const items = ids.length === 1 ? await OBR.scene.items.getItems(ids) : [];
-    if (version !== revision) return;
-    current = items.find(item => item.type === "IMAGE" && item.layer === "CHARACTER") || null;
-    selected = current?.id;
-    $("status").textContent = current ? "" : "Selecione um único token da camada Personagem.";
-    render();
-  } catch (error) { $("status").textContent = "Não foi possível ler o token. " + error.message; }
+  const [token] = await OBR.scene.items.getItems([tokenId]);
+  current = token?.type === "IMAGE" && token.layer === "CHARACTER" ? token : null;
+  if (!current) { await OBR.popover.close(PANEL_ID); return; }
+  render();
+}
+async function resize(height) {
+  if (OBR.isAvailable) await OBR.popover.setHeight(PANEL_ID, height);
 }
 async function mutate(action) {
-  if (!selected || busy) return;
-  const target = selected;
+  if (!current || busy) return;
   busy = true; render();
   try {
-    await OBR.scene.items.updateItems([target], items => {
-      for (const item of items) item.metadata[KEY] = change(item.metadata[KEY], action);
+    await OBR.scene.items.updateItems([tokenId], items => {
+      for (const item of items) item.metadata[KEY] = change(item.metadata?.[KEY], action);
     });
+    // Do not depend on an onChange event arriving before updateItems resolves.
+    await refresh();
     $("status").textContent = "";
-  } catch (error) { $("status").textContent = "Não foi possível salvar. Verifique sua permissão para editar este token. " + error.message; }
-  finally { busy = false; render(); }
+    return true;
+  } catch (error) {
+    $("status").textContent = "Não foi possível salvar. Verifique a permissão do token.";
+    console.error("Arsenal:", error);
+    return false;
+  } finally { busy = false; render(); }
 }
-$("settings").onclick = () => {
-  if (!current) return;
-  const state = normalize(current.metadata[KEY]);
+async function openConfig() {
+  if (!current || busy) return;
+  const state = normalize(current.metadata?.[KEY]);
   $("size").value = state.capacity; $("layout").value = state.layout;
+  await resize(280);
   $("config").showModal();
-};
+  $("settings").setAttribute("aria-expanded", "true");
+}
+$("settings").onclick = () => { void openConfig().catch(console.error); };
 $("cancel").onclick = () => $("config").close();
-$("config-form").onsubmit = event => {
+$("config").addEventListener("close", () => {
+  $("settings").setAttribute("aria-expanded", "false");
+  const height = panelSize(normalize(current?.metadata?.[KEY]).layout).height;
+  void resize(height).catch(console.error);
+});
+$("config-form").onsubmit = async event => {
   event.preventDefault();
-  if (!$("config-form").reportValidity()) return;
-  $("config").close();
-  void mutate({type:"configure",capacity:Number($("size").value),layout:$("layout").value});
+  if (!$("config-form").reportValidity() || busy) return;
+  const action = {type:"configure",capacity:Number($("size").value),layout:$("layout").value};
+  if (await mutate(action)) $("config").close();
 };
 render();
 if (!OBR.isAvailable) {
-  $("status").textContent = "Instale esta extensão no Owlbear Rodeo usando https://Onze1Onze.github.io/manifest.json";
+  $("status").textContent = "Abra esta extensão em uma sala do Owlbear Rodeo.";
 } else OBR.onReady(async () => {
-  OBR.scene.items.onChange(items => {
-    const token = items.find(item => item.id === selected);
-    current = token?.type === "IMAGE" && token.layer === "CHARACTER" ? token : null;
-    if (!current) $("config").close();
-    render();
-  });
-  OBR.scene.onReadyChange(() => { $("config").close(); void refresh(); });
-  if (!fixed) OBR.player.onChange(player => { if (player.selection !== undefined) { $("config").close(); void refresh(); } });
-  await refresh();
+  try {
+    OBR.scene.items.onChange(items => {
+      const token = items.find(item => item.id === tokenId);
+      current = token?.type === "IMAGE" && token.layer === "CHARACTER" ? token : null;
+      if (!current) { void OBR.popover.close(PANEL_ID); return; }
+      render();
+    });
+    $("status").textContent = "";
+    await refresh();
+  } catch (error) { $("status").textContent = "Não foi possível carregar o personagem."; console.error(error); }
 });
