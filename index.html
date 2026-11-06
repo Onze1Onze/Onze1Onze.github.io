@@ -1,14 +1,12 @@
 <!doctype html>
 <html lang="pt-BR">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Arsenal • Munição</title><link rel="stylesheet" href="/styles.css?v=1.5.0"></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Arsenal • Munição</title><link rel="stylesheet" href="/styles.css?v=1.6.0"></head>
 <body><main>
-<header><h1 id="name">Munição</h1><span id="count" aria-live="polite"><b id="remaining">0</b><span> / </span><span id="capacity">12</span></span><button id="settings" type="button" aria-label="Configurar carregador" title="Configurar carregador" aria-expanded="false">⚙</button></header>
+<header><h1 id="name">Munição</h1><button id="burst" type="button" hidden title="Gastar 10 balas carregadas">Saraivada</button><span id="count" aria-live="polite"><b id="remaining">0</b><span> / </span><span id="capacity">12</span></span><button id="settings" type="button" aria-label="Configurar carregador" title="Configurar carregador" aria-expanded="false">⚙</button></header>
 <p id="status" role="status">Conectando…</p>
 <section id="tracker" hidden><div id="rounds" aria-label="Munições no carregador"></div></section>
 <dialog id="config"><form id="config-form">
-<h2>Carregador</h2><label for="size">Capacidade total</label><input id="size" type="number" min="1" max="60" step="1" required>
-<label for="layout">Formato</label><select id="layout"><option value="pistol">Pistola</option><option value="rifle">Fuzil</option><option value="revolver">Revólver</option></select>
-<p class="hint">As balas novas entram carregadas.</p>
+<h2>Armamento</h2><label for="weapon">Arma e capacidade</label><select id="weapon"></select><p class="hint">Cada arma mantém sua própria munição neste personagem.</p>
 <footer><button type="button" id="cancel">Cancelar</button><button class="primary" type="submit">Salvar</button></footer>
 </form></dialog>
-</main><script type="module" src="/src/app.js?v=1.5.0"></script></body></html>
+</main><script type="module" src="/src/app.js?v=1.6.0"></script></body></html>

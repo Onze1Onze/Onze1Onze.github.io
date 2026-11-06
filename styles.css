@@ -17,3 +17,23 @@ dialog::backdrop{background:#14151ddb}h2{font-size:14px;margin:0 0 12px}label{di
 input,select{width:100%;height:34px;padding:5px 8px;border:1px solid #4a4d5d;border-radius:5px;background:#191b24;color:#eee}
 .hint{font-size:10px;color:#929aaa;margin:8px 0}footer{display:flex;gap:8px;margin-top:12px}footer button{flex:1}.primary{background:#eabd77;border-color:#eabd77;color:#241d14}.primary:hover{background:#f2ca8f}
 [hidden]{display:none!important}@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* Weapon-specific magazines retain the existing compact panel dimensions. */
+main{background:linear-gradient(120deg,#252630,#20212a)}
+header{gap:5px}#burst{font-size:9px;line-height:18px;padding:0 5px;border-color:#6c5940;background:#3a3025;color:#efc78b;white-space:nowrap}
+#burst:hover{background:#51402b}#burst:disabled{opacity:.35;cursor:not-allowed}
+#rounds{display:block;padding:3px 4px;background:linear-gradient(#171921,#1e2029)}
+.magazine{position:relative;height:46px;min-width:100%;border-radius:5px}
+.magazine .round{position:absolute;flex:none}
+#rounds.pistol .magazine{background:repeating-linear-gradient(90deg,transparent 0 26px,#ffffff05 26px 27px)}
+#rounds.hunting{border-color:#61533e;background:linear-gradient(100deg,#30291f,#171921)}
+#rounds.hunting .round{border-bottom:2px solid #8f7855}
+#rounds.smg .magazine{background:repeating-linear-gradient(90deg,transparent 0 18px,#878e9c22 18px 19px)}
+#rounds.shotgun{border-color:#6b4540}.shotgun .round{color:#c88a75}
+#rounds.assault{border-color:#4d5c4b}.assault .round{color:#b7c18d}
+#rounds.sniper{border-color:#506579;background:linear-gradient(90deg,#1b2633,#171921)}.sniper .round{color:#a8c6d9}
+#rounds.machinegun .magazine{background:repeating-linear-gradient(90deg,transparent 0 20px,#997b4c66 20px 24px)}
+.machinegun .round{color:#d1aa6e}.round.spent{color:#515360}
+#rounds.revolver{padding:0 4px;display:flex}
+.revolver .magazine{flex:0 0 96px;width:96px!important;min-width:96px;height:96px;margin:auto;border-radius:50%;background:radial-gradient(circle,#666370 0 7%,#222430 8% 57%,#45424c 58% 62%,transparent 63%)}
+.revolver .round{transform:translate(-50%,-50%);border-radius:50%}

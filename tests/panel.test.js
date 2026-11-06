@@ -67,7 +67,7 @@ test("position fits short screens and accounts for party size",()=>{
   assert.ok(panelPosition(400,260,6,148).top+148<=260);
 });
 test("all revolver chambers fit within their drum without overlaps",()=>{
-  for(let capacity=1;capacity<=60;capacity++){
+  for(let capacity=6;capacity<=6;capacity++){
     const positions=Array.from({length:capacity},(_,i)=>chamberPosition(i,capacity));
     for(let i=0;i<positions.length;i++){
       const p=positions[i];

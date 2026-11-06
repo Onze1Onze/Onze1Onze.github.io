@@ -1,6 +1,6 @@
 import OBR from "https://esm.sh/@owlbear-rodeo/sdk@2.3.0";
-import {normalize} from "./state.js?v=1.5.0";
-import {createPanelController} from "./panel.js?v=1.5.0";
+import {normalize} from "./state.js?v=1.6.0";
+import {createPanelController} from "./panel.js?v=1.6.0";
 OBR.onReady(async () => {
   const panel = createPanelController({
     scene: OBR.scene, viewport: OBR.viewport, party: OBR.party, popover: OBR.popover,
