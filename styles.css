@@ -4,3 +4,6 @@ main{padding:12px}header{margin-bottom:4px;gap:6px}.eyebrow{display:none}h1{font
 
 /* Fixed compact token panel */
 main{padding:8px}header{margin-bottom:2px}.summary{margin:6px 0}.summary strong{font-size:23px}#rounds{padding:6px;gap:3px;min-height:48px;max-height:108px}.round{width:24px;height:42px}.rifle .round{width:21px;height:50px}.hint{font-size:9px;margin:4px 0}footer{margin-top:5px}footer button{font-size:11px;padding:5px 7px}.revolver{height:108px}.revolver .round{width:26px;height:26px}
+
+/* Barra compacta fixa sob o painel Players */
+main{padding:8px}header{margin-bottom:2px;gap:6px}.eyebrow{display:none}h1{font-size:14px;margin:0}#settings{font-size:17px;padding:3px 7px}.summary{margin:5px 0}.summary strong{font-size:22px}.summary small{font-size:12px}#layout-label{font-size:8px;padding:3px 6px;letter-spacing:1px}#rounds{padding:5px 6px;gap:3px;flex-wrap:nowrap;justify-content:flex-start;min-height:48px;height:54px;max-height:54px;overflow-x:auto;overflow-y:hidden;border-radius:8px}.round{width:20px;height:38px;padding:1px}.rifle .round{width:18px;height:43px}.round:hover{transform:translateY(-1px)}.revolver{height:54px;min-width:100%;overflow:hidden}.revolver .round{width:25px;height:25px}#status{font-size:10px}

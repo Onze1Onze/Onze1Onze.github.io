@@ -38,7 +38,6 @@ function render() {
     button.onclick = () => mutate({type:"toggle",index});
     container.append(button);
   });
-  $("reload").disabled = busy; $("empty").disabled = busy;
 }
 async function refresh() {
   const version = ++revision;
@@ -79,8 +78,6 @@ $("config-form").onsubmit = event => {
   $("config").close();
   void mutate({type:"configure",capacity:Number($("size").value),layout:$("layout").value});
 };
-$("reload").onclick = () => mutate({type:"reload"});
-$("empty").onclick = () => mutate({type:"empty"});
 render();
 if (!OBR.isAvailable) {
   $("status").textContent = "Instale esta extensão no Owlbear Rodeo usando https://Onze1Onze.github.io/manifest.json";

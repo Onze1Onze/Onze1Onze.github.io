@@ -1,6 +1,6 @@
 import OBR from "https://esm.sh/@owlbear-rodeo/sdk@2.3.0";
 const id = "com.onze1onze.arsenal/panel";
-const PANEL_WIDTH = 230, PANEL_HEIGHT = 240, GAP = 10;
+const PANEL_WIDTH = 300, PANEL_HEIGHT = 130;
 let target = null, last = "", running = false;
 async function tick() {
   if (running) return;
@@ -13,23 +13,11 @@ async function tick() {
     }
     const tokenId = target;
     const [token] = await OBR.scene.items.getItems([tokenId]);
-    if (!token) { target = null; return; }
-    const bounds = await OBR.scene.items.getItemBounds([tokenId]);
-    const [point, viewportWidth, viewportHeight] = await Promise.all([
-      OBR.viewport.transformPoint({x: bounds.max.x, y: bounds.center.y}),
-      OBR.viewport.getWidth(), OBR.viewport.getHeight()
-    ]);
-    if (target !== tokenId) return;
-
-    // Calculate the position once, when the token is selected.
-    // POSITION keeps the panel fixed while the camera moves.
-    let left = Math.round(point.x + GAP);
-    if (left + PANEL_WIDTH > viewportWidth) left = Math.round(point.x - PANEL_WIDTH - GAP);
-    left = Math.max(0, Math.min(left, viewportWidth - PANEL_WIDTH));
-    const top = Math.max(0, Math.min(
-      Math.round(point.y - PANEL_HEIGHT / 2),
-      viewportHeight - PANEL_HEIGHT
-    ));
+    if (!token) { target = null; if (last) await OBR.popover.close(id); last = ""; return; }
+    // The player list is in the upper-left. Keep this bar directly below it.
+    const viewportWidth = await OBR.viewport.getWidth();
+    const left = Math.max(8, Math.min(16, viewportWidth - PANEL_WIDTH - 8));
+    const top = 310;
     const key = tokenId + ":" + left + ":" + top;
     if (key === last) return;
     await OBR.popover.open({
@@ -51,7 +39,11 @@ async function tick() {
   }
 }
 async function select(ids) {
-  if (!ids?.length) return;
+  if (!ids?.length) {
+    target = null;
+    void tick();
+    return;
+  }
   if (ids.length !== 1) {
     target = null;
     void tick();
