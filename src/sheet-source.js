@@ -28,7 +28,12 @@ export function requestUrl(config) {
  // Re-validate even stored metadata; never fetch arbitrary token-provided hosts.
  const c=parseSheetLink(config.url);
  if(c.published)return "https://docs.google.com/spreadsheets/d/e/"+c.id+"/pub?gid="+c.gid+"&single=true&output=csv";
- return "https://docs.google.com/spreadsheets/d/"+c.id+"/gviz/tq?gid="+c.gid+"&headers=0&range=F9%3AX18&tqx=out%3Ajson";
+ return "https://docs.google.com/spreadsheets/d/"+c.id+"/gviz/tq?gid="+c.gid+"&headers=0&range=F9%3AX9&tqx=out%3Ajson";
+}
+export function requestDetailsUrl(config){
+ const c=parseSheetLink(config.url);
+ if(c.published)return requestUrl(c);
+ return "https://docs.google.com/spreadsheets/d/"+c.id+"/gviz/tq?gid="+c.gid+"&headers=0&range=F16%3AR16&tqx=out%3Ajson";
 }
 export function numberValue(value) {
  if(typeof value==="number")return Number.isFinite(value)?value:null;
@@ -52,21 +57,39 @@ export function metricValues(cells) {
 export function detailValues(cells){
  return DETAILS.map(detail=>({...detail,kind:"detail",value:cells[detail.cell]===null||cells[detail.cell]===undefined||String(cells[detail.cell]).trim()===""?"—":String(cells[detail.cell]).trim().slice(0,40)}));
 }
-export function parseVisualization(text) {
+function visualizationTable(text){
  if(/^\s*</.test(text))throw Error("A planilha exige login. Compartilhe para leitura por link ou publique a aba.");
- const body=text.trim().replace(/^\/\*O_o\*\/\s*/,"");
- const wrapper="google.visualization.Query.setResponse(";
+ const body=text.trim().replace(/^\/\*O_o\*\/\s*/,""),wrapper="google.visualization.Query.setResponse(";
  const raw=body.startsWith(wrapper)?body.slice(wrapper.length).replace(/\);?\s*$/,""):body;
  let result;try{result=JSON.parse(raw);}catch{throw Error("O Google não retornou dados legíveis. Confira o compartilhamento da planilha.");}
  if(result.status==="error")throw Error("Não foi possível ler a aba. Confira o link, o gid e o acesso público.");
- const rows=result.table?.rows;
- if(!Array.isArray(rows)||!Array.isArray(rows[0]?.c))throw Error("A linha 9 está vazia ou não foi encontrada.");
- const cells={};
- for(const m of METRICS)for(const cell of [m.current,m.maximum]){
-  const index=cell.charCodeAt(0)-70,v=rows[0].c[index];cells[cell]=v?.v??v?.f??null;
+ if(!Array.isArray(result.table?.rows))throw Error("A consulta não retornou os valores da ficha.");
+ return result.table;
+}
+function rowCell(table,cell){
+ const row=table.rows[0]?.c;
+ if(!Array.isArray(row))return null;
+ const letter=cell[0];
+ // Sheets normally returns absolute column IDs. Preserve holes, but also handle omitted empty columns.
+ const absolute=table.cols?.[0]?.id==="F";
+ const index=absolute?table.cols.findIndex(col=>col.id===letter):letter.charCodeAt(0)-70;
+ return row[index]??null;
+}
+export function parseDetailVisualization(text){
+ const table=visualizationTable(text),cells={};
+ for(const detail of DETAILS){
+  const cell=rowCell(table,detail.cell);
+  cells[detail.cell]=cell?.f??cell?.v??null;
  }
- for(const detail of DETAILS){const cell=rows[7]?.c?.[detail.cell.charCodeAt(0)-70];cells[detail.cell]=cell?.f??cell?.v??null;}
- return [...metricValues(cells),...detailValues(cells)];
+ return detailValues(cells);
+}
+export function parseVisualization(text,detailsText){
+ const table=visualizationTable(text),cells={};
+ for(const metric of METRICS)for(const address of [metric.current,metric.maximum]){
+  const cell=rowCell(table,address);cells[address]=cell?.v??cell?.f??null;
+ }
+ // Separate one-row requests avoid type inference and missing-row offsets in mixed multi-row data.
+ return [...metricValues(cells),...(detailsText?parseDetailVisualization(detailsText):detailValues({}))];
 }
 
 export function parseCsv(text) {
@@ -93,14 +116,27 @@ export function parsePublished(text) {
  for(const detail of DETAILS)cells[detail.cell]=rows[15]?.[detail.cell.charCodeAt(0)-65];
  return [...metricValues(cells),...detailValues(cells)];
 }
-export async function fetchMetrics(config,{signal,fetchImpl=globalThis.fetch}={}) {
+export async function fetchMetrics(config,{signal,fetchImpl=globalThis.fetch}={}){
  const canonical=parseSheetLink(config.url);
- let response;
- try{response=await fetchImpl(requestUrl(canonical),{signal,credentials:"omit",cache:"no-store",referrerPolicy:"no-referrer"});}
- catch(error){if(error.name==="AbortError")throw error;throw Error("Sem acesso à planilha. Confira a conexão e o compartilhamento público.");}
- if(!response.ok)throw Error(response.status===429?"Google limitou as consultas. Aguarde a próxima atualização.":"Google recusou a leitura. Verifique se a aba pode ser lida sem login.");
- if(Number(response.headers?.get("content-length"))>2_000_000)throw Error("Planilha muito grande. Publique somente a aba da ficha.");
- const text=await response.text();
- if(text.length>2_000_000)throw Error("Planilha muito grande. Publique somente a aba da ficha.");
- return canonical.published?parsePublished(text):parseVisualization(text);
+ async function download(url){
+  let response;
+  try{response=await fetchImpl(url,{signal,credentials:"omit",cache:"no-store",referrerPolicy:"no-referrer"});}
+  catch(error){if(error.name==="AbortError")throw error;throw Error("Sem acesso à planilha. Confira a conexão e o compartilhamento público.");}
+  if(!response.ok)throw Error(response.status===429?"Google limitou as consultas. Aguarde a próxima atualização.":"Google recusou a leitura. Verifique se a aba pode ser lida sem login.");
+  if(Number(response.headers?.get("content-length"))>2_000_000)throw Error("Planilha muito grande. Publique somente a aba da ficha.");
+  const text=await response.text();
+  if(text.length>2_000_000)throw Error("Planilha muito grande. Publique somente a aba da ficha.");
+  return text;
+ }
+ if(canonical.published)return parsePublished(await download(requestUrl(canonical)));
+ const [main,extra]=await Promise.all([
+  download(requestUrl(canonical)),
+  download(requestDetailsUrl(canonical)).then(text=>({values:parseDetailVisualization(text)})).catch(error=>({error}))
+ ]);
+ const values=parseVisualization(main).filter(value=>value.kind!=="detail");
+ if(extra.error){
+  if(extra.error.name==="AbortError")throw extra.error;
+  return [...values,...detailValues({}).map(value=>({...value,error:"Não foi possível ler os valores únicos: "+extra.error.message}))];
+ }
+ return [...values,...extra.values];
 }

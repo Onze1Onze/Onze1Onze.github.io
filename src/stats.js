@@ -1,8 +1,8 @@
-import {DEATH_KEY,normalizeCondition,toggleFailure,syncHealth} from "./death-state.js?v=1.16.0";
+import {DEATH_KEY,normalizeCondition,toggleFailure,syncHealth} from "./death-state.js?v=1.16.1";
 import OBR from "https://esm.sh/@owlbear-rodeo/sdk@3.1.0";
-import {SHEET_KEY,parseSheetLink,METRICS} from "./sheet-source.js?v=1.16.0";
-import {createSheetPoller} from "./sheet-poller.js?v=1.16.0";
-import {STATS_ID} from "./sheet-controller.js?v=1.16.0";
+import {SHEET_KEY,parseSheetLink,METRICS,DETAILS} from "./sheet-source.js?v=1.16.1";
+import {createSheetPoller} from "./sheet-poller.js?v=1.16.1";
+import {STATS_ID} from "./sheet-controller.js?v=1.16.1";
 const $=id=>document.getElementById(id),tokenId=new URLSearchParams(location.search).get("token");
 let active="",revision=0,disposed=false,current=null,markBusy=false;
 const markers=[...document.querySelectorAll("[data-mark]")];
@@ -33,18 +33,28 @@ function message(text,stale=false){$("status").textContent=text;$("status").titl
 const poller=createSheetPoller({
  onData:values=>{
   if(disposed)return;
-  for(const value of values){
-   if(value.kind==="detail"){$(value.id+"-value").textContent=value.value;$(value.id+"-value").title=value.label+": "+value.value;continue;}
-   $(value.id+"-value").textContent=format.format(value.current)+" / "+format.format(value.maximum);
-   $(value.id+"-fill").style.width=value.percent+"%";
-   const bar=$(value.id+"-bar");
+  for(const metric of METRICS){
+   const value=values.find(value=>value.id===metric.id);if(!value)continue;
+   $(metric.id+"-value").textContent=format.format(value.current)+" / "+format.format(value.maximum);
+   $(metric.id+"-fill").style.width=value.percent+"%";
+   const bar=$(metric.id+"-bar");
    bar.setAttribute("aria-valuemin","0");bar.setAttribute("aria-valuemax",String(value.maximum));
    bar.setAttribute("aria-valuenow",String(Math.min(value.maximum,Math.max(0,value.current))));
    bar.setAttribute("aria-valuetext",value.current+" de "+value.maximum);
   }
+  // These four fields are scalars, never current/max pairs or progress bars.
+  for(const detail of DETAILS){
+   const value=values.find(value=>value.id===detail.id);if(!value)continue;
+   if(!value.error)$(detail.id+"-value").textContent=value.value;
+   $(detail.id+"-value").title=value.error||detail.label+" ("+detail.cell+"): "+value.value;
+  }
   const hp=values.find(value=>value.id==="hp")?.current;
   void updateLocalHealth(hp);
-  message("Atualizado às "+new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit",second:"2-digit"}));
+  const warning=values.find(value=>value.kind==="detail"&&value.error)?.error;
+  const missing=values.filter(value=>value.kind==="detail"&&!value.error&&value.value==="—").map(value=>value.label);
+  if(warning)message(warning,false);
+  else if(missing.length)message("Sem valor em: "+missing.join(", ")+". Confira a aba e as células.",false);
+  else message("Atualizado às "+new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit",second:"2-digit"}));
  },
  onError:error=>{if(!disposed)message(error.message,true);}
 });
@@ -68,6 +78,7 @@ function render(token){
  if(config.url===active)return;
  active=config.url;
  for(const metric of METRICS){$(metric.id+"-value").textContent="— / —";$(metric.id+"-fill").style.width="0%";}
+ for(const detail of DETAILS)$(detail.id+"-value").textContent="—";
  message("Lendo ficha…");poller.start(config);
 }
 globalThis.addEventListener("pagehide",stop,{once:true});

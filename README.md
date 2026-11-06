@@ -1,6 +1,6 @@
 # Arsenal — munição para Owlbear Rodeo
 ## Instalação
-Ative o GitHub Pages na branch main, pasta raiz, e instale https://Onze1Onze.github.io/manifest.json na sala. A versão atual é 1.16.0.
+Ative o GitHub Pages na branch main, pasta raiz, e instale https://Onze1Onze.github.io/manifest.json na sala. A versão atual é 1.16.1.
 ## Uso
 Selecione exatamente um token da camada Personagem. A barra aparece à esquerda, abaixo da região Players, e fecha ao desselecionar, selecionar vários itens, apagar o token ou fechar a cena.
 Clique nas balas para gastar ou devolver. A engrenagem escolhe a arma com capacidade fixa. A configuração expande temporariamente a mesma janela.
@@ -57,3 +57,6 @@ Uma caveira segue o token em Morrendo; em Morto ela fica maior e o efeito nativo
 Referência do efeito nativo: https://docs.owlbear.rodeo/extensions/reference/effects/
 
 Esta versão usa o SDK oficial 3.1.0, que disponibiliza Billboard e Effect para os indicadores de condição.
+
+## Correção dos valores únicos (1.16.1)
+Deslocamento, Defesa, Bloqueio e Esquiva são valores únicos, sem máximo e sem barra. A leitura de links comuns agora faz duas consultas independentes: F9:X9 para os três recursos e F16:R16 para os quatro valores únicos. Assim, não depende da posição da linha 16 dentro de uma tabela com linhas vazias ou tipos misturados. O valor zero é preservado e unidades formatadas, como 9 m, continuam visíveis. Falhas na consulta dos valores únicos geram um aviso; não impedem a leitura de Vida nem criam um estado Morrendo. Links publicados continuam usando as coordenadas absolutas do CSV.

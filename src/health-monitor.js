@@ -1,5 +1,5 @@
-import {SHEET_KEY,parseSheetLink,fetchMetrics} from "./sheet-source.js?v=1.16.0";
-import {syncHealth} from "./death-state.js?v=1.16.0";
+import {SHEET_KEY,parseSheetLink,fetchMetrics} from "./sheet-source.js?v=1.16.1";
+import {syncHealth} from "./death-state.js?v=1.16.1";
 export async function isHealthAuthority(api){
  const role=await api.player.getRole(),id=await api.player.getId();
  if(role!=="GM")return false;

@@ -39,7 +39,7 @@ test("all four new merged fields map to F16/J16/L16/P16, including movement form
   const row=Number(cell.slice(1))-9,col=cell.charCodeAt(0)-70;
   rows[row].c[col]={v:value,...(cell==="P16"?{f:"9 m"}:{})};
  }
- const v=parseVisualization(JSON.stringify({status:"ok",table:{rows}}));
+ const v=parseVisualization(JSON.stringify({status:"ok",table:{rows:[rows[0]]}}),JSON.stringify({status:"ok",table:{rows:[rows[7]]}}));
  assert.deepEqual(v.slice(3).map(d=>[d.id,d.value]),[["movement","9 m"],["defense","15"],["block","5"],["dodge","20"]]);
  const csv=Array.from({length:18},()=>Array(25).fill(""));
  for(const [cell,value] of Object.entries({F9:40,J9:60,M9:18,Q9:25,T9:6,X9:12,F16:15,J16:20,L16:5,P16:"9 m"}))csv[Number(cell.slice(1))-1][cell.charCodeAt(0)-65]=String(value);

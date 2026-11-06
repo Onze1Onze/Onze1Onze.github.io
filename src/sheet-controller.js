@@ -1,5 +1,5 @@
-import {normalizeCondition,DEATH_KEY} from "./death-state.js?v=1.16.0";
-import {SHEET_KEY,parseSheetLink} from "./sheet-source.js?v=1.16.0";
+import {normalizeCondition,DEATH_KEY} from "./death-state.js?v=1.16.1";
+import {SHEET_KEY,parseSheetLink} from "./sheet-source.js?v=1.16.1";
 export const STATS_ID="com.onze1onze.arsenal/stats";
 export const SHEET_SETTINGS_ID="com.onze1onze.arsenal/sheet-settings";
 export function statsPosition(width,height,critical=false){
@@ -24,7 +24,7 @@ export function createSheetController(api){
     if(version!==revision)continue;
     const position=statsPosition(w,h,normalizeCondition(token.metadata[DEATH_KEY]).status!=="alive"),key=JSON.stringify([token.id,config.url,position]);
     if(key===active)continue;
-    await api.popover.open({id:STATS_ID,url:"/stats.html?v=1.16.0&token="+encodeURIComponent(token.id),
+    await api.popover.open({id:STATS_ID,url:"/stats.html?v=1.16.1&token="+encodeURIComponent(token.id),
      width:position.width,height:position.height,anchorReference:"POSITION",anchorPosition:{left:position.left,top:position.top},
      transformOrigin:{horizontal:"LEFT",vertical:"TOP"},disableClickAway:true,marginThreshold:0});
     active=key;
@@ -40,6 +40,6 @@ export async function registerSheetMenu(OBR){
    filter:{min:1,max:1,every:[{key:"type",value:"IMAGE"},{key:"layer",value:"CHARACTER"}]}}],
   onClick:async context=>{
    const token=context.items[0];if(!token)return;
-   await OBR.popover.open({id:SHEET_SETTINGS_ID,url:"/sheet-settings.html?v=1.16.0&token="+encodeURIComponent(token.id),width:340,height:480});
+   await OBR.popover.open({id:SHEET_SETTINGS_ID,url:"/sheet-settings.html?v=1.16.1&token="+encodeURIComponent(token.id),width:340,height:480});
   }});
 }

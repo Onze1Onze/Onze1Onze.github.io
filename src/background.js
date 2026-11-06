@@ -1,11 +1,11 @@
-import {createHealthMonitor} from "./health-monitor.js?v=1.16.0";
-import {createConditionVisuals} from "./death-visuals.js?v=1.16.0";
-import {createSheetController,registerSheetMenu,SHEET_SETTINGS_ID} from "./sheet-controller.js?v=1.16.0";
-import {cleanupRetired} from "./cleanup-retired.js?v=1.16.0";
-import {createPortraitController} from "./portrait-controller.js?v=1.16.0";
+import {createHealthMonitor} from "./health-monitor.js?v=1.16.1";
+import {createConditionVisuals} from "./death-visuals.js?v=1.16.1";
+import {createSheetController,registerSheetMenu,SHEET_SETTINGS_ID} from "./sheet-controller.js?v=1.16.1";
+import {cleanupRetired} from "./cleanup-retired.js?v=1.16.1";
+import {createPortraitController} from "./portrait-controller.js?v=1.16.1";
 import OBR,{buildBillboard,buildEffect} from "https://esm.sh/@owlbear-rodeo/sdk@3.1.0";
-import {normalize} from "./state.js?v=1.16.0";
-import {createPanelController} from "./panel.js?v=1.16.0";
+import {normalize} from "./state.js?v=1.16.1";
+import {createPanelController} from "./panel.js?v=1.16.1";
 OBR.onReady(async () => {
   const cleanup=()=>cleanupRetired(OBR).catch(error=>console.error("Limpeza de dados antigos:",error));
   await cleanup();

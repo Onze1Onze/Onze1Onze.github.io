@@ -2,7 +2,7 @@ import {DEATH_KEY,normalizeCondition,toggleFailure,syncHealth} from "../src/deat
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
-import {SHEET_KEY,parseSheetLink} from "../src/sheet-source.js";
+import {SHEET_KEY,parseSheetLink,DETAILS} from "../src/sheet-source.js";
 import {SHEET_SETTINGS_ID,STATS_ID} from "../src/sheet-controller.js";
 const settingsSource=readFileSync(new URL("../src/sheet-settings.js",import.meta.url),"utf8").replace(/^import .*;\n/gm,"");
 function element(){
@@ -47,8 +47,8 @@ test("status UI preserves old values but marks them stale on network failure",as
  let handlers,ready,stopped=0;
  const api={player:{getRole:async()=>"GM"},party:{getPlayers:async()=>[]},onReady:fn=>{ready=fn;},scene:{items:{getItems:async()=>[{id:"a",type:"IMAGE",layer:"CHARACTER",metadata:{[SHEET_KEY]:{url:"https://docs.google.com/spreadsheets/d/id/edit"}}}],onChange:()=>{}},onReadyChange:()=>{}},popover:{close:async()=>{}}};
  const source=readFileSync(new URL("../src/stats.js",import.meta.url),"utf8").replace(/^import .*;\n/gm,"");
- new Function("OBR","document","globalThis","location","SHEET_KEY","parseSheetLink","METRICS","createSheetPoller","STATS_ID","DEATH_KEY","normalizeCondition","toggleFailure","syncHealth",source)(
- api,{getElementById:id=>nodes[id],body,querySelectorAll:()=>[]},{addEventListener(){}},{search:"?token=a"},SHEET_KEY,parseSheetLink,[{id:"hp"},{id:"san"},{id:"pe"}],callbacks=>{handlers=callbacks;return {start(){},stop(){stopped++;}};},STATS_ID,DEATH_KEY,normalizeCondition,toggleFailure,syncHealth);
+ new Function("OBR","document","globalThis","location","SHEET_KEY","parseSheetLink","METRICS","DETAILS","createSheetPoller","STATS_ID","DEATH_KEY","normalizeCondition","toggleFailure","syncHealth",source)(
+ api,{getElementById:id=>nodes[id],body,querySelectorAll:()=>[]},{addEventListener(){}},{search:"?token=a"},SHEET_KEY,parseSheetLink,[{id:"hp"},{id:"san"},{id:"pe"}],DETAILS,callbacks=>{handlers=callbacks;return {start(){},stop(){stopped++;}};},STATS_ID,DEATH_KEY,normalizeCondition,toggleFailure,syncHealth);
  await ready();
  handlers.onData([{id:"hp",current:18,maximum:25,percent:72},{id:"san",current:40,maximum:60,percent:66.66},{id:"pe",current:6,maximum:12,percent:50}]);
  assert.equal(nodes["hp-value"].textContent,"18 / 25");assert.equal(nodes["hp-fill"].style.width,"72%");
@@ -67,8 +67,8 @@ test("death buttons write shared marks, reach dead at three and permit undo; per
  const api={player:{getRole:async()=>"GM"},party:{getPlayers:async()=>[]},onReady:fn=>{ready=fn;},scene:{items:{
  getItems:async()=>[token],onChange:()=>{},updateItems:async(ids,fn)=>{if(fail)throw Error("permission");fn([token]);}},onReadyChange:()=>{}},popover:{close:async()=>{}}};
  const source=readFileSync(new URL("../src/stats.js",import.meta.url),"utf8").replace(/^import .*;\n/gm,"");
- new Function("OBR","document","globalThis","location","SHEET_KEY","parseSheetLink","METRICS","createSheetPoller","STATS_ID","DEATH_KEY","normalizeCondition","toggleFailure","syncHealth","console",source)(
- api,{getElementById:id=>nodes[id],querySelectorAll:()=>marks,body:{classList:{toggle(){}}}},{addEventListener(){}},{search:"?token=a"},SHEET_KEY,parseSheetLink,[{id:"hp"},{id:"san"},{id:"pe"}],()=>({start(){},stop(){}}),STATS_ID,DEATH_KEY,normalizeCondition,toggleFailure,syncHealth,{error(){}});
+ new Function("OBR","document","globalThis","location","SHEET_KEY","parseSheetLink","METRICS","DETAILS","createSheetPoller","STATS_ID","DEATH_KEY","normalizeCondition","toggleFailure","syncHealth","console",source)(
+ api,{getElementById:id=>nodes[id],querySelectorAll:()=>marks,body:{classList:{toggle(){}}}},{addEventListener(){}},{search:"?token=a"},SHEET_KEY,parseSheetLink,[{id:"hp"},{id:"san"},{id:"pe"}],DETAILS,()=>({start(){},stop(){}}),STATS_ID,DEATH_KEY,normalizeCondition,toggleFailure,syncHealth,{error(){}});
  await ready();assert.equal(nodes["death-track"].hidden,false);
  for(const button of marks){button.onclick();await flush();}
  assert.equal(token.metadata[DEATH_KEY].status,"dead");assert.equal(nodes["condition-label"].textContent,"Morto");

@@ -33,7 +33,7 @@ test("reads precisely all six top-left cells of the merged ranges",()=>{
  const values=parseVisualization(visualization());
  assert.deepEqual(values.slice(0,3).map(v=>[v.label,v.current,v.maximum]),[["Vida",18,25],["Sanidade",40,60],["PE",6,12]]);
  const url=new URL(requestUrl(parseSheetLink(link)));
- assert.equal(url.searchParams.get("range"),"F9:X18");assert.equal(url.searchParams.get("headers"),"0");
+ assert.equal(url.searchParams.get("range"),"F9:X9");assert.equal(url.searchParams.get("headers"),"0");
  assert.equal(url.searchParams.get("gid"),"42");
 });
 test("published CSV respects row 9, blanks, quotes, CRLF and multiline cells",()=>{
